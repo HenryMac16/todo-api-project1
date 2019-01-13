@@ -26,7 +26,7 @@ app.get('/todos', (req, res) => {
     res.send({todos}) //create an array and set it equal to todos
   }, (e) => {
     res.status(400).send(e);
-  })
+  });
 });
 //this callback fires when app runs
 app.listen(3000, () => {
