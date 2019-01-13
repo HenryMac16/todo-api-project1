@@ -21,6 +21,13 @@ app.post('/todos', (req, res) => { //for resource creation
   });
 });
 
+app.get('/todos', (req, res) => {
+  Todo.find().then((todos) => {
+    res.send({todos}) //create an array and set it equal to todos
+  }, (e) => {
+    res.status(400).send(e);
+  })
+});
 //this callback fires when app runs
 app.listen(3000, () => {
   console.log('Started on port 3000')
