@@ -35,7 +35,7 @@ app.get('/todos', (req, res) => {
 //GET /todos/ID-make it dynamic
 app.get('/todos/:id', (req, res) => {
   var id = req.params.id;
-
+  //console.log('request made')
   if(!ObjectID.isValid(id)) {
     return res.status(404).send();
   }
@@ -46,7 +46,25 @@ app.get('/todos/:id', (req, res) => {
     }
       res.status(200).send({todo}); //todo:todo
   }).catch((e) => {
-    res.status(404).send();
+    res.status(400).send();
+  });
+
+  app.delete('/todos/:id', (req, res) => {
+    var id = req.params.id;
+
+    if (!ObjectID.isValid(id)) {
+      return res.status(404).send();
+    }
+
+    Todo.findByIdAndRemove(id).then((todo) => {
+      if (!todo) {
+        return res.status(404).send();
+      }
+
+      res.send(todo);
+    }).catch((e) => {
+      res.status(400).send();
+    });
   });
   //validate id using isValid
     //stop function execution, respond with 404, empty send
