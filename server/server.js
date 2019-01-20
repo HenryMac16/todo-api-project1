@@ -1,24 +1,24 @@
-require('./config/config.js');
+require('../config/config.js');
 
 const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
+const {ObjectID} = require('mongodb');
 
 var {mongoose} = require('./db/mongoose');
-const {ObjectID} = require('mongodb');
 var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 
 var app = express();
-const port = process.env.PORT; //|| 3000;
+const port = process.env.PORT;
 
-app.use(bodyParser.json()); //returns a function
+app.use(bodyParser.json());
 
-//CRUD - create read update delete
-app.post('/todos', (req, res) => { //for resource creation
+app.post('/todos', (req, res) => {
   var todo = new Todo({
     text: req.body.text
   });
+
   todo.save().then((doc) => {
     res.send(doc);
   }, (e) => {
@@ -28,52 +28,51 @@ app.post('/todos', (req, res) => { //for resource creation
 
 app.get('/todos', (req, res) => {
   Todo.find().then((todos) => {
-    res.send({todos}) //create an array and set it equal to todos
+    res.send({todos});
   }, (e) => {
     res.status(400).send(e);
   });
 });
-//this callback fires when app runs
 
-//GET /todos/ID-make it dynamic
 app.get('/todos/:id', (req, res) => {
   var id = req.params.id;
-  //console.log('request made')
-  if(!ObjectID.isValid(id)) {
+
+  if (!ObjectID.isValid(id)) {
     return res.status(404).send();
   }
 
   Todo.findById(id).then((todo) => {
-    if(!todo) {
+    if (!todo) {
       return res.status(404).send();
     }
-      res.status(200).send({todo}); //todo:todo
+
+    res.send({todo});
   }).catch((e) => {
     res.status(400).send();
   });
+});
 
-  app.delete('/todos/:id', (req, res) => {
-    var id = req.params.id;
+app.delete('/todos/:id', (req, res) => {
+  var id = req.params.id;
 
-    if (!ObjectID.isValid(id)) {
+  if (!ObjectID.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  Todo.findByIdAndRemove(id).then((todo) => {
+    if (!todo) {
       return res.status(404).send();
     }
 
-    Todo.findByIdAndRemove(id).then((todo) => {
-      if (!todo) {
-        return res.status(404).send();
-      }
-
-      res.send({todo});
-    }).catch((e) => {
-      res.status(400).send();
-    });
+    res.send({todo});
+  }).catch((e) => {
+    res.status(400).send();
   });
 });
 
 app.patch('/todos/:id', (req, res) => {
   var id = req.params.id;
-  var body = _.pick(req.body, ['text', 'completed']); //pull this off
+  var body = _.pick(req.body, ['text', 'completed']);
 
   if (!ObjectID.isValid(id)) {
     return res.status(404).send();
@@ -87,7 +86,7 @@ app.patch('/todos/:id', (req, res) => {
   }
 
   Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
-    if(!todo) {
+    if (!todo) {
       return res.status(404).send();
     }
 
@@ -97,8 +96,23 @@ app.patch('/todos/:id', (req, res) => {
   })
 });
 
+// POST /users
+app.post('/users', (req, res) => {
+  var body = _.pick(req.body, ['email', 'password']);
+  var user = new User(body);
+
+  user.save().then(() => { //having a user in this is the same as above
+    return user.generateAuthToken(); //use return for chaining promises
+    //res.send(user);
+  }).then((token) => {
+    res.header('x-auth', token).send(user);
+  }).catch((e) => {
+    res.status(400).send(e);
+  })
+});
+
 app.listen(port, () => {
-  console.log(`Started on port ${port}`)
+  console.log(`Started up at port ${port}`);
 });
 
 module.exports = {app};
