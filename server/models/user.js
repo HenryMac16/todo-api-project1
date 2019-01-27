@@ -32,7 +32,7 @@ var UserSchema = new mongoose.Schema({
   }]
 });
 //arrow functions do not bind a this keyword
-UserSchema.methods.toJSON = function () {
+UserSchema.methods.toJSON = function () { //determined what gets sent back
   var user = this;
   var userObject = user.toObject(); //takes mongoose variable, converts to regular ObjectID
 
@@ -48,6 +48,26 @@ UserSchema.methods.generateAuthToken = function() {
 
   return user.save().then(() => {
     return token;
+  });
+};
+//model, not instance method
+UserSchema.statics.findByToken = function (token) { //called as the model with the this binding
+  var User = this;
+  var decoded;
+
+  try {
+    decoded = jwt.verify(token, 'abc123');
+  } catch (e) {
+    // return new Promise((resolve, reject) => {
+    //   reject();
+    // });
+    return Promise.reject(); //value passed in would get bassed in as the e value in catch
+  }
+
+  return User.findOne({
+    '_id': decoded._id,
+    'tokens.token': token, //quotes required with a . in the value
+    'tokens.access': 'auth'
   });
 };
 
