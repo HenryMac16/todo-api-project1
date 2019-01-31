@@ -65,7 +65,20 @@ UserSchema.statics.findByToken = function (token) { //called as the model with t
     // });
     return Promise.reject(); //value passed in would get bassed in as the e value in catch
   }
+  UserSchema.pre('save', function (next) {
+    var user = this;
 
+    if (user.isModified('password')) {
+      bcrypt.genSalt(10, (err, salt) => {
+        bcrypt.hash(user.password, salt, (err, hash) => {
+          user.password = hash;
+          next();
+        });
+      });
+    } else {
+      next();
+    }
+  });
   return User.findOne({
     '_id': decoded._id,
     'tokens.token': token, //quotes required with a . in the value
