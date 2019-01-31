@@ -50,6 +50,8 @@ UserSchema.methods.generateAuthToken = function() {
     return token;
   });
 };
+
+
 //model, not instance method
 UserSchema.statics.findByToken = function (token) { //called as the model with the this binding
   var User = this;
