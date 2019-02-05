@@ -73,6 +73,17 @@ UserSchema.statics.findByToken = function (token) { //called as the model with t
     'tokens.access': 'auth'
   });
 };
+
+UserSchema.methods.removeToken = function (token) {
+  var user = this;
+
+  return user.update({
+    $pull: {
+      tokens: {token}
+    }
+  });
+};
+
 UserSchema.statics.findByCredentials = function (email, password) {
   var User = this;
 
